@@ -36,54 +36,77 @@
 
         <nav class="space-y-3 mt-6">
 
+            <!-- Dashboard -->
             <a href="{{ route('dashboard') }}"
                class="flex items-center gap-3 py-2 px-3 rounded transition
                {{ request()->routeIs('dashboard') ? 'bg-blue-800 text-white' : 'hover:bg-blue-700' }}">
                 <span class="icon">home</span> Dashboard
             </a>
 
+            <!-- Anggota (Admin Only) -->
+            @if(auth()->user()->role === 'admin')
             <a href="{{ route('anggota') }}"
                class="flex items-center gap-3 py-2 px-3 rounded transition
                {{ request()->routeIs('anggota*') ? 'bg-blue-800 text-white' : 'hover:bg-blue-700' }}">
                 <span class="icon">group</span> Manajemen Anggota
             </a>
+            @endif
 
+            <!-- Wajib Pajak -->
+            @if(in_array(auth()->user()->role, ['admin', 'petugas']))
             <a href="{{ route('wajib.pajak') }}"
                class="flex items-center gap-3 py-2 px-3 rounded transition
                {{ request()->routeIs('wajib.pajak*') ? 'bg-blue-800 text-white' : 'hover:bg-blue-700' }}">
                 <span class="icon">description</span> Wajib Pajak
             </a>
+            @endif
 
+            <!-- Kendaraan -->
+            @if(in_array(auth()->user()->role, ['admin', 'petugas']))
             <a href="{{ route('kendaraan') }}"
                class="flex items-center gap-3 py-2 px-3 rounded transition
                {{ request()->routeIs('kendaraan*') ? 'bg-blue-800 text-white' : 'hover:bg-blue-700' }}">
                 <span class="icon">directions_car</span> Data Kendaraan
             </a>
+            @endif
 
+            <!-- Pembayaran -->
+            @if(in_array(auth()->user()->role, ['admin', 'petugas']))
             <a href="{{ route('pembayaran') }}"
                class="flex items-center gap-3 py-2 px-3 rounded transition
                {{ request()->routeIs('pembayaran*') ? 'bg-blue-800 text-white' : 'hover:bg-blue-700' }}">
                 <span class="icon">payments</span> Pembayaran Pajak
             </a>
+            @endif
 
+            <!-- Laporan -->
+            @if(in_array(auth()->user()->role, ['admin', 'petugas', 'pimpinan']))
             <a href="{{ route('laporan') }}"
                class="flex items-center gap-3 py-2 px-3 rounded transition
-               {{ request()->routeIs('laporan*') ? 'bg-blue-800 text-white' : 'hover:bg-blue-700' }}">
+               {{ request()->routeIs('laporan') ? 'bg-blue-800 text-white' : 'hover:bg-blue-700' }}">
                 <span class="icon">bar_chart</span> Laporan
             </a>
+            @endif
 
+            <!-- Log Pesan -->
+            @if(in_array(auth()->user()->role, ['admin', 'petugas', 'pimpinan']))
             <a href="{{ route('log.pesan') }}"
                class="flex items-center gap-3 py-2 px-3 rounded transition
                {{ request()->routeIs('log.pesan*') ? 'bg-blue-800 text-white' : 'hover:bg-blue-700' }}">
                 <span class="icon">chat</span> Log Pesan
             </a>
+            @endif
 
         </nav>
 
         <div class="mt-10">
-            <button class="w-full bg-black py-2 rounded text-white font-semibold flex justify-center items-center gap-2">
-                <span class="icon">logout</span> LOGOUT
-            </button>
+            <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <button
+                    class="w-full bg-black py-2 rounded text-white font-semibold flex justify-center items-center gap-2 hover:bg-gray-900 transition">
+                    <span class="icon">logout</span> LOGOUT
+                </button>
+            </form>
         </div>
     </aside>
 
@@ -98,7 +121,7 @@
 
             <div class="flex items-center gap-2">
                 <span class="icon text-xl">account_circle</span>
-                <span class="text-sm">Halo, admin</span>
+                <span class="text-sm">Halo, {{ Auth::user()->name }}</span>
             </div>
         </header>
 

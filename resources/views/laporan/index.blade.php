@@ -21,14 +21,14 @@
             {{-- Dari Tanggal --}}
             <div>
                 <label class="block text-gray-800 text-sm font-semibold mb-1">Dari Tanggal</label>
-                <input type="date" name="dari" value="{{ $dari }}"
+                <input type="date" name="dari" value="{{ $dari ?? null }}"
                     class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
             </div>
 
             {{-- Sampai Tanggal --}}
             <div>
                 <label class="block text-gray-800 text-sm font-semibold mb-1">Sampai Tanggal</label>
-                <input type="date" name="sampai" value="{{ $sampai }}"
+                <input type="date" name="sampai" value="{{ $sampai ?? null }}"
                     class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
             </div>
 
@@ -39,11 +39,15 @@
                     class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
 
                     <option value="semua" {{ $jenis == 'semua' ? 'selected' : '' }}>Semua</option>
-                    <option value="pajak_1_tahun" {{ $jenis == 'pajak_1_tahun' ? 'selected' : '' }}>Pajak 1 Tahun</option>
-                    <option value="pajak_5_tahun" {{ $jenis == 'pajak_5_tahun' ? 'selected' : '' }}>Pajak 5 Tahun</option>
-
+                    
+                    @foreach ($dataJenis as $key => $label)
+                        <option value="{{ $label }}" {{ $jenis == $label ? 'selected' : '' }}>
+                            {{ $label }}
+                        </option>
+                    @endforeach
                 </select>
-            </div>
+
+            </div>    
 
             {{-- Tombol --}}
             <div class="flex items-end gap-4">

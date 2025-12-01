@@ -9,22 +9,33 @@ class LaporanController extends Controller
 {
     public function index(Request $request)
     {
-        $dari = $request->dari ?? date('Y-m-01');
-        $sampai = $request->sampai ?? date('Y-m-t');
-        $jenis = $request->jenis ?? 'semua';
+        $dataJenis = PembayaranPajak::$jenisPajakList;
+        $query = PembayaranPajak::with(['kendaraan.wajibPajak']);
 
-        $query = PembayaranPajak::with(['kendaraan.wajibPajak'])
-            ->whereBetween('tanggal_bayar', [$dari, $sampai]);
-
-        if ($jenis !== 'semua') {
-            $query->where('jenis_pajak', $jenis);
+        // FILTER TANGGAL
+        if ($request->has('dari') && $request->dari !== null) {
+            $query->whereDate('tanggal_bayar', '>=', $request->dari);
         }
 
-        $pembayaran = $query->orderBy('tanggal_bayar', 'asc')->get();
+        if ($request->has('sampai') && $request->sampai !== null) {
+            $query->whereDate('tanggal_bayar', '<=', $request->sampai);
+        }
 
+        // FILTER JENIS
+        if ($request->filled('jenis') && $request->jenis !== 'semua') {
+            $query->where('jenis_pajak', $request->jenis);
+        }
+
+        $pembayaran = $query->orderBy('tanggal_bayar')->get();
         $total = $pembayaran->sum('jumlah_bayar');
 
-        return view('laporan.index', compact('pembayaran', 'dari', 'sampai', 'jenis', 'total'));
+        return view('laporan.index', [
+            'dataJenis'  => $dataJenis,
+            'pembayaran' => $pembayaran,
+            'dari'       => $request->dari,
+            'sampai'     => $request->sampai,
+            'jenis'      => $request->jenis ?? 'semua',
+            'total'      => $total
+        ]);
     }
-
 }

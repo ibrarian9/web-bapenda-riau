@@ -48,9 +48,9 @@ class LoginController extends Controller
 
             // Redirect berdasarkan role
             return match ($user->role) {
-                'Admin'    => redirect()->route('dashboard'),
-                'Pimpinan' => redirect()->route('pimpinan.dashboard'),
-                'Petugas'  => redirect()->route('petugas.dashboard'),
+                'admin'    => redirect()->route('dashboard'),
+                'pimpinan' => redirect()->route('dashboard'),
+                'petugas'  => redirect()->route('dashboard'),
                 default    => redirect()->route('login')->withErrors([
                     'email' => 'Role tidak dikenali oleh sistem.'
                 ])

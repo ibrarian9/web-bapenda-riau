@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Kendaraan;
 use App\Models\Pajak;
-use App\Models\PembayaranPajak;
 use App\Models\WajibPajak;
 use App\Models\WaLog;
 use Barryvdh\DomPDF\Facade\Pdf;

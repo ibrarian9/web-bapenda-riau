@@ -34,9 +34,9 @@ class User extends Authenticatable
     ];
 
     const ROLES = [
-        'Admin',
-        'Pimpinan',
-        'Petugas'
+        'admin',
+        'pimpinan',
+        'petugas'
     ];
 
     /**

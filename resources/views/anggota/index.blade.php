@@ -48,9 +48,9 @@
                             <td class="border px-3 py-2 text-center">
                                 @php
                                     $color = match ($user->role) {
-                                        'Pimpinan' => 'bg-red-700',
-                                        'Admin' => 'bg-blue-700',
-                                        'Petugas' => 'bg-teal-600',
+                                        'pimpinan' => 'bg-red-700',
+                                        'admin' => 'bg-blue-700',
+                                        'petugas' => 'bg-teal-600',
                                         default => 'bg-gray-500',
                                     };
                                 @endphp
@@ -64,19 +64,29 @@
 
                                 <!-- Edit -->
                                 <a href="{{ route('anggota.edit', $user->id) }}"
-                                    class="text-gray-700 text-lg hover:text-black">✏️</a>
+                                class="text-gray-700 hover:text-black">
+                                    <span class="material-symbols-rounded text-[22px]">
+                                        edit
+                                    </span>
+                                </a>
 
                                 <!-- Delete -->
                                 <button onclick="deleteUser({{ $user->id }})"
-                                    class="text-red-600 text-lg hover:text-red-800">🗑️</button>
+                                        class="text-red-600 hover:text-red-800">
+                                    <span class="material-symbols-rounded text-[22px]">
+                                        delete
+                                    </span>
+                                </button>
 
                                 <!-- Form Delete (hidden) -->
                                 <form id="delete-form-{{ $user->id }}"
-                                    action="{{ route('anggota.destroy', $user->id) }}" method="POST" class="hidden">
+                                    action="{{ route('anggota.destroy', $user->id) }}"
+                                    method="POST" class="hidden">
                                     @csrf
                                     @method('DELETE')
                                 </form>
                             </td>
+
                         </tr>
                     @empty
                         <tr>

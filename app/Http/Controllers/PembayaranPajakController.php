@@ -15,8 +15,19 @@ class PembayaranPajakController extends Controller
     {
         $njkb = $kendaraan->pajak->njkb;
 
+        $tarifPkb = [
+            'Sepeda Motor' => 0.02,
+            'Mobil'        => 0.04,
+            'Pick Up'      => 0.06,
+            'Truk'         => 0.06,
+            'Bus'          => 0.06,
+        ];
+
+        $tipe = $kendaraan->tipe;
+        $persentase = $tarifPkb[$tipe] ?? 0.02;
+
         // PKB = 2% dari NJKB
-        $pkb = $njkb * 0.02;
+        $pkb = $njkb * $persentase;
 
         // SWDKLLJ motor standar
         $swdkllj = 35000;

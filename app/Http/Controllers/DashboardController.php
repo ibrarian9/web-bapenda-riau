@@ -6,7 +6,6 @@ use App\Models\Kendaraan;
 use App\Models\PembayaranPajak;
 use App\Models\WajibPajak;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
