@@ -12,14 +12,12 @@
 
     <div class="bg-white/80 w-[380px] rounded-lg shadow-xl border border-gray-300 p-6">
 
-        <!-- Logo -->
         <div class="flex justify-center mb-4">
             <img src="{{ asset('images/logo-bapenda.png') }}" alt="Logo" class="h-20">
         </div>
 
         <h2 class="text-center text-xl font-semibold text-gray-800 mb-4">LOGIN</h2>
 
-        <!-- ERROR NOTIFICATION -->
         @if ($errors->any())
             <div class="mb-4 p-3 rounded-md border border-red-400 bg-red-100 text-red-700 text-sm">
                 <ul class="list-disc pl-4">
@@ -33,7 +31,6 @@
         <form action="{{ route('login.process') }}" method="POST" class="space-y-4">
             @csrf
 
-            <!-- Username -->
             <div>
                 <label class="block text-sm font-medium text-gray-700">Username</label>
                 <input type="text" name="email" value="{{ old('email') }}"
@@ -41,7 +38,6 @@
                     placeholder="Username">
             </div>
 
-            <!-- Password -->
             <div>
                 <label class="block text-sm font-medium text-gray-700">Password</label>
                 <input type="password" name="password"
@@ -49,29 +45,12 @@
                     placeholder="Password">
             </div>
 
-            <!-- Sebagai -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Sebagai</label>
-                <select name="role"
-                    class="w-full mt-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
-
-                    <option value="" disabled selected>Pilih role</option>
-
-                    @foreach ($roles as $role)
-                        <option value="{{ $role }}">{{ $role }}</option>
-                    @endforeach
-
-                </select>
-            </div>
-
-            <!-- Button -->
             <button type="submit" class="w-full bg-gray-900 text-white py-2 rounded-md hover:bg-gray-800 transition">
                 Sign In
             </button>
 
         </form>
 
-        <!-- Forgot Password -->
         <div class="mt-4 text-center">
             <a href="#" class="text-sm text-gray-700 underline hover:text-gray-900">
                 Forgot password?

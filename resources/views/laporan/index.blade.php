@@ -55,7 +55,7 @@
                     🔍 Tampilkan
                 </button>
 
-                <a href="{{ route('laporan', request()->all()) }}"
+                <a href="{{ route('laporan.pdf', request()->all()) }}"
                     class="bg-red-600 text-white px-5 py-2 rounded hover:bg-red-700 flex items-center gap-2">
                     📄 Cetak PDF
                 </a>

@@ -7,41 +7,142 @@ use App\Models\Pajak;
 use App\Models\WajibPajak;
 use App\Models\WaLog;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class WajibPajakController extends Controller
 {
+
+    private function resolveJatuhTempo(?string $tanggal)
+    {
+        if (!$tanggal) {
+            return [
+                'tanggal' => '-',
+                'label' => '-',
+                'color' => 'text-gray-400'
+            ];
+        }
+
+        $now = Carbon::now()->startOfDay();
+        $jatuhTempo = Carbon::parse($tanggal)->startOfDay();
+        $diffDays = $now->diffInDays($jatuhTempo, false);
+
+        if ($diffDays < 0) {
+            return [
+                'tanggal' => $jatuhTempo->format('d-m-Y'),
+                'label' => 'Terlambat',
+                'color' => 'text-red-700'
+            ];
+        }
+
+        $years = $now->diffInYears($jatuhTempo);
+        $months = $now->diffInMonths($jatuhTempo) % 12;
+
+        if ($years >= 1) {
+            $label = $years . ' thn';
+            $color = 'text-green-700';
+        } elseif ($months >= 1) {
+            $label = $months . ' bln';
+            $color = 'text-yellow-600';
+        } else {
+            $label = $diffDays . ' hari';
+            $color = 'text-red-600';
+        }
+
+        return [
+            'tanggal' => $jatuhTempo->format('d-m-Y'),
+            'label' => $label,
+            'color' => $color
+        ];
+    }
+
     public function index(Request $request)
     {
         $search = $request->search;
 
-        $data = WajibPajak::with(['kendaraans.pembayaran'])
+        $data = WajibPajak::with([
+            'kendaraans.pembayaran',
+            'kendaraans.pajak'
+        ])
             ->when($search, function ($query) use ($search) {
                 $query->where('nik', 'like', "%{$search}%")
                     ->orWhere('nama', 'like', "%{$search}%")
-                    ->orWhereHas('kendaraans', function ($q) use ($search) {
-                        $q->where('nopol', 'like', "%{$search}%");
-                    });
+                    ->orWhereHas(
+                        'kendaraans',
+                        fn($q) =>
+                        $q->where('nopol', 'like', "%{$search}%")
+                    );
             })
             ->orderBy('nama')
             ->paginate(10);
 
-        $totalWp = $data->count();
-        $totalKendaraan = $data->sum(fn($wp) => $wp->kendaraans->count());
-        $totalLunas = $data->sum(function ($wp) {
-            return $wp->kendaraans->filter(fn($k) => $k->pembayaran)->count();
+        /** ===============================
+         *  ENRICH KENDARAAN DATA
+         *  =============================== */
+        $data->getCollection()->transform(function ($wp) {
+            $wp->kendaraans->transform(function ($k) {
+
+                $info = $this->resolveJatuhTempo(
+                    $k->pajak?->tenggat_jatuh_tempo
+                );
+
+                $k->jatuh_tempo        = $info['tanggal'];
+                $k->jatuh_tempo_label  = $info['label'];
+                $k->jatuh_tempo_color  = $info['color'];
+
+                $k->status_pajak = $k->pembayaran
+                    ? 'LUNAS'
+                    : 'BELUM LUNAS';
+
+                return $k;
+            });
+
+            return $wp;
         });
+
+        /** ===============================
+         *  STATISTIK
+         *  =============================== */
+        $totalWp = $data->total();
+        $totalKendaraan = $data->sum(fn($wp) => $wp->kendaraans->count());
+        $totalLunas = $data->sum(
+            fn($wp) => $wp->kendaraans->whereNotNull('pembayaran')->count()
+        );
         $totalBelum = $totalKendaraan - $totalLunas;
 
-        return view('wajib-pajak.index', compact('data', 'totalWp', 'totalKendaraan', 'totalLunas', 'totalBelum'));
+        return view('wajib-pajak.index', compact(
+            'data',
+            'totalWp',
+            'totalKendaraan',
+            'totalLunas',
+            'totalBelum',
+            'search'
+        ));
     }
 
     public function show($id)
     {
-        $data = WajibPajak::with(['kendaraans.pajak', 'kendaraans.pembayaran'])->findOrFail($id);
+        $data = WajibPajak::with([
+            'kendaraans.pajak',
+            'kendaraans.pembayaran'
+        ])->findOrFail($id);
+
         $kendaraan = $data->kendaraans->first();
-        $statusPajak = $kendaraan->pembayaran ? 'LUNAS' : 'BELUM LUNAS';
-        return view('wajib-pajak.detail', compact('data', 'statusPajak'));
+
+        $statusPajak = $kendaraan->pembayaran
+            ? 'LUNAS'
+            : 'BELUM LUNAS';
+
+        $jatuhTempoInfo = $this->resolveJatuhTempo(
+            $kendaraan->pajak?->tenggat_jatuh_tempo
+        );
+
+        return view('wajib-pajak.detail', compact(
+            'data',
+            'kendaraan',
+            'statusPajak',
+            'jatuhTempoInfo'
+        ));
     }
 
     public function create()
@@ -194,8 +295,35 @@ class WajibPajakController extends Controller
     {
         $data = Kendaraan::with('wajibPajak')->findOrFail($id);
 
+        $now = Carbon::now();
+        $jatuhTempo = Carbon::parse($data->pajak->tenggat_jatuh_tempo);
+
+        // Format tanggal Indonesia
+        $tanggalJatuhTempo = $jatuhTempo->translatedFormat('d F Y');
+
+        if ($jatuhTempo->isPast()) {
+            $labelWaktu = 'sudah melewati jatuh tempo';
+            $warna = 'text-red-600';
+        } else {
+            $diff = $now->diff($jatuhTempo);
+
+            if ($diff->y > 0) {
+                $labelWaktu = $diff->y . ' tahun';
+                $warna = 'text-green-600';
+            } elseif ($diff->m > 0) {
+                $labelWaktu = $diff->m . ' bulan';
+                $warna = 'text-yellow-600';
+            } else {
+                $labelWaktu = $diff->d . ' hari';
+                $warna = 'text-red-600';
+            }
+        }
+
         return view('notifikasi.create', [
-            'data' => $data
+            'data' => $data,
+            'labelWaktu' => $labelWaktu,
+            'tanggalJatuhTempo' => $tanggalJatuhTempo,
+            'warna' => $warna
         ]);
     }
 

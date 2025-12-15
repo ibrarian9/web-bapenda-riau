@@ -11,10 +11,14 @@ use Illuminate\Http\Request;
 
 class PembayaranPajakController extends Controller
 {
-    private function hitungPajak($kendaraan, $jenisPajak)
+    private function hitungPajak($kendaraan, $jenisPajak, ?Carbon $tanggalBayar = null)
     {
-        $njkb = $kendaraan->pajak->njkb;
+        $tanggalBayar = $tanggalBayar ?? Carbon::now();
 
+        $pajak = $kendaraan->pajak;
+        $njkb = $pajak->njkb;
+
+        /* ================= TARIF PKB ================= */
         $tarifPkb = [
             'Sepeda Motor' => 0.02,
             'Mobil'        => 0.04,
@@ -23,44 +27,55 @@ class PembayaranPajakController extends Controller
             'Bus'          => 0.06,
         ];
 
-        $tipe = $kendaraan->tipe;
-        $persentase = $tarifPkb[$tipe] ?? 0.02;
-
-        // PKB = 2% dari NJKB
+        $persentase = $tarifPkb[$kendaraan->tipe] ?? 0.02;
         $pkb = $njkb * $persentase;
 
-        // SWDKLLJ motor standar
+        /* ================= SWDKLLJ ================= */
         $swdkllj = 35000;
 
-        // Hitung telat berdasarkan tenggat_jatuh_tempo
-        $jatuhTempo = Carbon::parse($kendaraan->pajak->tenggat_jatuh_tempo);
-        $hariTelat  = $jatuhTempo->diffInDays(Carbon::now(), false);
-        $bulanTelat = $hariTelat > 0 ? ceil($hariTelat / 30) : 0;
+        /* ================= DENDA ================= */
+        $jatuhTempoLama = Carbon::parse($pajak->tenggat_jatuh_tempo);
 
-        // Denda PKB 25% per bulan
+        if ($tanggalBayar->greaterThan($jatuhTempoLama)) {
+            $bulanTelat = min(
+                ceil($jatuhTempoLama->diffInDays($tanggalBayar) / 30),
+                24
+            );
+        } else {
+            $bulanTelat = 0;
+        }
+
         $denda_pkb = $bulanTelat > 0 ? $pkb * 0.25 * $bulanTelat : 0;
-
-        // Denda SWDKLLJ fix
         $denda_swd = $bulanTelat > 0 ? 8000 : 0;
 
-        // Tambahan biaya jika Pajak 5 Tahun
-        $stnk = $jenisPajak === "Pajak 5 Tahun" ? 100000 : 0;
-        $tnkb = $jenisPajak === "Pajak 5 Tahun" ? 60000 : 0;
-        $admin = $jenisPajak === "Pajak 5 Tahun" ? 25000 : 0;
+        /* ================= BIAYA TAMBAHAN ================= */
+        $stnk  = $jenisPajak === 'Pajak 5 Tahun' ? 100000 : 0;
+        $tnkb  = $jenisPajak === 'Pajak 5 Tahun' ? 60000  : 0;
+        $admin = $jenisPajak === 'Pajak 5 Tahun' ? 25000  : 0;
 
+        /* ================= JATUH TEMPO BARU ================= */
+        $jatuhTempoBaru = match ($jenisPajak) {
+            'Pajak 1 Tahun' => $tanggalBayar->copy()->addYear(),
+            'Pajak 5 Tahun' => $tanggalBayar->copy()->addYears(5),
+            default => throw new \Exception('Jenis pajak tidak valid'),
+        };
+
+        /* ================= TOTAL ================= */
         $total = $pkb + $swdkllj + $denda_pkb + $denda_swd + $stnk + $tnkb + $admin;
 
         return [
-            'pkb'       => (int) $pkb,
-            'swdkllj'   => (int) $swdkllj,
-            'denda_pkb' => (int) $denda_pkb,
-            'denda_swd' => (int) $denda_swd,
+            // lama (dipakai UI & JS)
+            'pkb'         => (int) $pkb,
+            'swdkllj'     => (int) $swdkllj,
+            'denda_pkb'   => (int) $denda_pkb,
+            'denda_swd'   => (int) $denda_swd,
             'bulan_telat' => $bulanTelat,
-            'stnk'      => $stnk,
-            'tnkb'      => $tnkb,
-            'admin'     => $admin,
-            'total'     => (int) $total,
-            'jatuh_tempo' => $jatuhTempo
+            'stnk'        => $stnk,
+            'tnkb'        => $tnkb,
+            'admin'       => $admin,
+            'total'       => (int) $total,
+            'jatuh_tempo_lama' => $jatuhTempoLama,
+            'jatuh_tempo_baru' => $jatuhTempoBaru,
         ];
     }
 
@@ -93,7 +108,7 @@ class PembayaranPajakController extends Controller
         return response()->json([
             'nama_wp' => $kendaraan->wajibPajak->nama,
             'telepon' => $kendaraan->wajibPajak->nomor_hp,
-            'jatuh_tempo' => $hasil['jatuh_tempo']->format('d/m/Y'),
+            'jatuh_tempo' => $hasil['jatuh_tempo_lama']->format('d/m/Y'),
             'pkb'     => number_format($hasil['pkb'], 0, ',', '.'),
             'swdkllj' => number_format($hasil['swdkllj'], 0, ',', '.'),
             'denda'   => number_format($hasil['denda_pkb'] + $hasil['denda_swd'], 0, ',', '.'),
@@ -117,7 +132,7 @@ class PembayaranPajakController extends Controller
 
         $kendaraan = Kendaraan::with('pajak')->findOrFail($request->kendaraan_id);
 
-        $hasil = $this->hitungPajak($kendaraan, $request->jenis_pajak);
+        $hasil = $this->hitungPajak($kendaraan, $request->jenis_pajak, Carbon::parse($request->tanggal_bayar));
 
         $bayar = PembayaranPajak::create([
             'kendaraan_id'  => $kendaraan->id,
@@ -129,15 +144,20 @@ class PembayaranPajakController extends Controller
         // Simpan rincian
         RincianPembayaranPajak::create([
             'pembayaran_pajak_id' => $bayar->id,
-            'jatuh_tempo' => $hasil['jatuh_tempo']->format('Y-m-d'),
+            'jatuh_tempo' => $hasil['jatuh_tempo_baru']->format('Y-m-d'),
             'pkb' => $hasil['pkb'],
             'swdkllj' => $hasil['swdkllj'],
             'denda' => $hasil['denda_pkb'] + $hasil['denda_swd'],
             'total_bayar' => $hasil['total']
         ]);
 
-        $nama = $kendaraan->wajibPajak->nama;
-        $hp   = $kendaraan->wajibPajak->nomor_hp;
+        $kendaraan->pajak->update([
+            'tenggat_jatuh_tempo' => $hasil['jatuh_tempo_baru']->format('Y-m-d'),
+            'status_awal' => 'Sudah Bayar Pajak'
+        ]);
+
+        $nama  = $kendaraan->wajibPajak->nama;
+        $hp    = $kendaraan->wajibPajak->nomor_hp;
         $nopol = $kendaraan->nopol;
 
         $pesan =
@@ -146,7 +166,7 @@ class PembayaranPajakController extends Controller
             "• Nomor Kendaraan: *{$nopol}*\n" .
             "• Jenis Pajak: *{$request->jenis_pajak}*\n" .
             "• Tanggal Bayar: *{$request->tanggal_bayar}*\n" .
-            "• Jumlah: *Rp " . number_format($request->jumlah_bayar, 0, ',', '.') . "*\n\n" .
+            "• Jumlah: *Rp " . number_format($hasil['total'], 0, ',', '.') . "*\n\n" .
             "Terima kasih telah melakukan pembayaran tepat waktu. 🙏";
 
         $this->sendWaFonnte($kendaraan, $nama, $hp, $pesan);

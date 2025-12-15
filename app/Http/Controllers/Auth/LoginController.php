@@ -18,47 +18,32 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-        // Validasi input
         $request->validate([
             'email'    => ['required', 'email'],
             'password' => ['required'],
-            'role'     => ['required', 'in:' . implode(',', User::ROLES)]
         ]);
 
-        // Ambil data berdasarkan email
-        $user = User::where('email', $request->email)->first();
-
-        // Cek apakah user ada
-        if (!$user) {
-            return back()->withErrors([
-                'email' => 'Email tidak terdaftar.'
-            ])->onlyInput('email');
-        }
-
-        // Validasi role harus sesuai dengan role di database
-        if ($user->role !== $request->role) {
-            return back()->withErrors([
-                'role' => 'Role yang Anda pilih tidak sesuai dengan akun.'
-            ])->onlyInput('email');
-        }
-
-        // Coba login
+        // 2. Coba login langsung
         if (Auth::attempt($request->only('email', 'password'))) {
             $request->session()->regenerate();
 
-            // Redirect berdasarkan role
+            // 3. Ambil user yang sudah login
+            $user = Auth::user();
+
+            // 4. Cek role dari database dan redirect
             return match ($user->role) {
                 'admin'    => redirect()->route('dashboard'),
                 'pimpinan' => redirect()->route('dashboard'),
                 'petugas'  => redirect()->route('dashboard'),
                 default    => redirect()->route('login')->withErrors([
-                    'email' => 'Role tidak dikenali oleh sistem.'
+                    'email' => 'Akun anda tidak memiliki akses yang valid.'
                 ])
             };
         }
 
+        // 5. Jika gagal login
         return back()->withErrors([
-            'password' => 'Password salah.'
+            'email' => 'Email atau password salah.',
         ])->onlyInput('email');
     }
 

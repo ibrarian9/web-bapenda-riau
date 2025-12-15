@@ -37,18 +37,16 @@
                 </div>
 
                 <div>
-                    @php
-                        $days = now()->diffInDays($data->jatuh_tempo, false);
-                    @endphp
-
-                    <p class="text-lg">
-                        Pajak kendaraan Anda akan jatuh tempo dalam 
-                        <input type="number"
-                               class="w-20 bg-gray-200 rounded px-2 py-1"
-                               value="{{ $days }}"
-                               readonly>
-                        hari.
+                   <p class="text-lg">
+                        Pajak kendaraan Anda akan jatuh tempo pada
+                        <span class="font-semibold">
+                            {{ $tanggalJatuhTempo }}
+                        </span>
+                        <span class="{{ $warna }} font-semibold">
+                            ({{ $labelWaktu }} lagi)
+                        </span>
                     </p>
+
                 </div>
 
                 <!-- Nomor Kendaraan -->
@@ -65,9 +63,9 @@
                 <div class="flex items-center gap-3">
                     <span class="text-2xl">📅</span>
                     <label class="text-lg w-48">Jatuh Tempo:</label>
-                    <input type="date" name="jatuh_tempo"
-                           value="{{ $data->jatuh_tempo }}"
-                           class="bg-white border rounded px-3 py-2 w-56">
+                        <span class="font-semibold">
+                            {{ $tanggalJatuhTempo }}
+                        </span>
                 </div>
 
                 <p class="text-lg leading-relaxed mt-4">

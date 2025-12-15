@@ -1,136 +1,118 @@
-<x-layouts.app>
-    <div class="p-6 space-y-8">
+<x-layouts.app title="Detail Wajib Pajak">
+    <div class="p-6 space-y-6">
 
-        <div class="text-xl font-semibold">Detail Kendaraan</div>
+        <!-- Header -->
+        <div class="flex items-center justify-between">
+            <h1 class="text-xl font-semibold">Detail Wajib Pajak</h1>
+            <a href="{{ route('wajib.pajak') }}"
+               class="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700">
+                Kembali
+            </a>
+        </div>
 
-        @php
-            $kendaraan = $data->kendaraans->first();
-            $pajak = $kendaraan?->pajak;
-        @endphp
+        <!-- Informasi Wajib Pajak -->
+        <div class="bg-white rounded-xl shadow p-6 space-y-3">
+            <h2 class="text-lg font-semibold border-b pb-2">Informasi Wajib Pajak</h2>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-            <!-- Detail Kendaraan -->
-            <div class="bg-white rounded-xl shadow p-4">
-                <div class="bg-gray-700 text-white px-4 py-2 rounded-t font-semibold">Detail Kendaraan</div>
-
-                @if ($kendaraan)
-                    <table class="w-full text-sm border">
-                        <tr>
-                            <td class="border px-3 py-2 font-medium">No. Kendaraan</td>
-                            <td class="border px-3 py-2">{{ $kendaraan->nopol }}</td>
-                        </tr>
-
-                        <tr>
-                            <td class="border px-3 py-2 font-medium">Merek / Tipe</td>
-                            <td class="border px-3 py-2">{{ $kendaraan->merek }} / {{ $kendaraan->tipe }}</td>
-                        </tr>
-
-                        <tr>
-                            <td class="border px-3 py-2 font-medium">Tahun Pembuatan</td>
-                            <td class="border px-3 py-2">{{ $kendaraan->tahun_pembuatan }}</td>
-                        </tr>
-
-                        <tr>
-                            <td class="border px-3 py-2 font-medium">Warna</td>
-                            <td class="border px-3 py-2">{{ $kendaraan->warna }}</td>
-                        </tr>
-
-                        <tr>
-                            <td class="border px-3 py-2 font-medium">No. Rangka</td>
-                            <td class="border px-3 py-2">{{ $kendaraan->nomor_rangka }}</td>
-                        </tr>
-
-                        <tr>
-                            <td class="border px-3 py-2 font-medium">No. Mesin</td>
-                            <td class="border px-3 py-2">{{ $kendaraan->nomor_mesin }}</td>
-                        </tr>
-
-                        <tr>
-                            <td class="border px-3 py-2 font-medium">Status Pajak</td>
-                            <td
-                                class="border px-3 py-2 font-semibold 
-                                {{ $statusPajak == 'LUNAS' ? 'text-green-700' : 'text-red-700' }}">
-                                {{ strtoupper($statusPajak) }}
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td class="border px-3 py-2 font-medium">NJKB</td>
-                            <td class="border px-3 py-2">
-                                {{ $pajak ? 'Rp. ' . number_format($pajak->njkb, 0, ',', '.') : '-' }}
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td class="border px-3 py-2 font-medium">Jatuh Tempo Pajak</td>
-                            <td class="border px-3 py-2">
-                                {{ $pajak?->tenggat_jatuh_tempo ? \Carbon\Carbon::parse($pajak->tenggat_jatuh_tempo)->translatedFormat('d F Y') : '-' }}
-                            </td>
-                        </tr>
-                    </table>
-                @else
-                    <p class="text-gray-500 text-center py-6">Belum ada data kendaraan.</p>
-                @endif
-
-            </div>
-
-            <!-- Riwayat Pembayaran -->
-            <div class="bg-white rounded-xl shadow p-4">
-                <div class="bg-gray-700 text-white px-4 py-2 rounded-t font-semibold flex items-center gap-2">
-                    <span>Riwayat Pembayaran Kendaraan Ini</span>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <span class="text-gray-500">Nama</span>
+                    <div class="font-medium">{{ $data->nama }}</div>
                 </div>
 
-                <table class="w-full text-sm border">
-                    <thead class="bg-gray-200">
-                        <tr>
-                            <th class="border px-3 py-2">Tanggal Bayar</th>
-                            <th class="border px-3 py-2">Jenis Pajak</th>
-                            <th class="border px-3 py-2">Jumlah</th>
-                            <th class="border px-3 py-2">Struk</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td colspan="4" class="text-center py-3 text-gray-500">
-                                Belum ada riwayat pembayaran
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div>
+                    <span class="text-gray-500">NIK</span>
+                    <div class="font-medium">{{ $data->nik }}</div>
+                </div>
+
+                <div>
+                    <span class="text-gray-500">Nomor HP</span>
+                    <div class="font-medium">{{ $data->nomor_hp }}</div>
+                </div>
+
+                <div>
+                    <span class="text-gray-500">Alamat</span>
+                    <div class="font-medium">{{ $data->alamat ?? '-' }}</div>
+                </div>
             </div>
-
         </div>
 
-        <!-- Detail Pemilik -->
-        <div class="bg-white rounded-xl shadow p-4">
-            <div class="bg-gray-700 text-white px-4 py-2 rounded-t font-semibold">Detail Pemilik</div>
+        <!-- Informasi Kendaraan -->
+        <div class="bg-white rounded-xl shadow p-6 space-y-4">
+            <h2 class="text-lg font-semibold border-b pb-2">Informasi Kendaraan</h2>
 
-            <table class="w-full text-sm border">
-                <tr>
-                    <td class="border px-3 py-2 font-medium">NIK</td>
-                    <td class="border px-3 py-2">{{ $data->nik }}</td>
-                </tr>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                    <span class="text-gray-500">Nomor Polisi</span>
+                    <div class="font-semibold text-lg">{{ $kendaraan->nopol }}</div>
+                </div>
 
-                <tr>
-                    <td class="border px-3 py-2 font-medium">Nama Pemilik</td>
-                    <td class="border px-3 py-2">{{ $data->nama }}</td>
-                </tr>
+                <div>
+                    <span class="text-gray-500">Merek</span>
+                    <div class="font-medium">{{ $kendaraan->merek }}</div>
+                </div>
 
-                <tr>
-                    <td class="border px-3 py-2 font-medium">Alamat</td>
-                    <td class="border px-3 py-2">{{ $data->alamat }}</td>
-                </tr>
+                <div>
+                    <span class="text-gray-500">Tipe</span>
+                    <div class="font-medium">{{ $kendaraan->tipe }}</div>
+                </div>
 
-                <tr>
-                    <td class="border px-3 py-2 font-medium">No. HP</td>
-                    <td class="border px-3 py-2">{{ $data->nomor_hp }}</td>
-                </tr>
-            </table>
+                <div>
+                    <span class="text-gray-500">Tahun Pembuatan</span>
+                    <div class="font-medium">{{ $kendaraan->tahun_pembuatan }}</div>
+                </div>
+
+                <div>
+                    <span class="text-gray-500">Warna</span>
+                    <div class="font-medium">{{ $kendaraan->warna }}</div>
+                </div>
+            </div>
         </div>
 
-        <div class="text-center pt-4">
-            <a href="{{ route('wajib.pajak') }}" class="bg-black text-white px-6 py-2 rounded">Kembali</a>
+        <!-- Informasi Pajak -->
+        <div class="bg-white rounded-xl shadow p-6 space-y-4">
+            <h2 class="text-lg font-semibold border-b pb-2">Informasi Pajak</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                    <span class="text-gray-500">Status Pajak</span>
+                    <div class="font-semibold
+                        {{ $statusPajak === 'LUNAS' ? 'text-green-700' : 'text-red-700' }}">
+                        {{ $statusPajak }}
+                    </div>
+                </div>
+
+                <div>
+                    <span class="text-gray-500">Tanggal Jatuh Tempo</span>
+                    <div class="font-semibold {{ $jatuhTempoInfo['color'] }}">
+                        {{ $jatuhTempoInfo['tanggal'] }}
+                        <span class="ml-1 text-xs">
+                            ({{ $jatuhTempoInfo['label'] }})
+                        </span>
+                    </div>
+                </div>
+
+                <div>
+                    <span class="text-gray-500">Jenis Pajak</span>
+                    <div class="font-medium">
+                        {{ $kendaraan->pajak->jenis_pajak ?? '-' }}
+                    </div>
+                </div>
+            </div>
         </div>
+
+        <!-- Aksi -->
+        <div class="flex gap-3">
+            <a href="{{ route('pembayaran.create', $kendaraan->id) }}"
+               class="px-5 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                Bayar Pajak
+            </a>
+
+            <a href="{{ route('wajib.pajak.edit', $kendaraan->id) }}"
+               class="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Edit Data
+            </a>
+        </div>
+
     </div>
 </x-layouts.app>

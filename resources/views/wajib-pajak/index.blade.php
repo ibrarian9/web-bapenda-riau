@@ -80,20 +80,20 @@
                         <th class="border px-3 py-2">No HP</th>
                         <th class="border px-3 py-2">Alamat</th>
                         <th class="border px-3 py-2">NOPOL</th>
+                        <th class="border px-3 py-2">TENGGAT</th>
                         <th class="border px-3 py-2">KET</th>
                         <th class="border px-3 py-2">Aksi</th>
                     </tr>
                 </thead>
 
                 <tbody>
-
                     @forelse ($data as $wp)
                         @php
                             $kendaraan = $wp->kendaraans->first();
                             $statusPajak = $kendaraan && $kendaraan->pembayaran ? 'LUNAS' : 'BELUM LUNAS';
                         @endphp
 
-                        <tr class="border">
+                        <tr>
                             <td class="border px-3 py-2">{{ $loop->iteration }}</td>
                             <td class="border px-3 py-2">{{ $wp->nik }}</td>
                             <td class="border px-3 py-2">{{ $wp->nama }}</td>
@@ -102,43 +102,60 @@
 
                             <td class="border px-3 py-2">{{ $kendaraan?->nopol ?? '-' }}</td>
 
+                            <td class="border px-3 py-2 text-center">
+                                @if ($kendaraan)
+                                    <div class="font-medium">
+                                        {{ $kendaraan->jatuh_tempo }}
+                                    </div>
+                                    <div class="text-xs font-semibold {{ $kendaraan->jatuh_tempo_color }}">
+                                        ({{ $kendaraan->jatuh_tempo_label }})
+                                    </div>
+                                @else
+                                    -
+                                @endif
+                            </td>
+
                             <td class="border px-3 py-2 font-semibold
                                 {{ $statusPajak == 'LUNAS' ? 'text-green-700' : 'text-red-700' }}">
                                 {{ $statusPajak }}
                             </td>
 
-                            <td class="border px-3 py-2 flex gap-2">
+                            <td class="border px-3 py-2">
+    <div class="flex justify-center items-center gap-2">
 
-                                <!-- Detail -->
-                                <a href="{{ route('wajib.pajak.show', $wp->id) }}"
-                                    class="text-blue-700">
-                                    <span class="material-symbols-outlined text-2xl">visibility</span>
-                                </a>
+        <!-- Detail -->
+        <a href="{{ route('wajib.pajak.show', $wp->id) }}"
+            class="text-blue-700">
+            <span class="material-symbols-outlined text-2xl">visibility</span>
+        </a>
 
-                                <!-- Edit -->
-                                <a href="{{ route('wajib.pajak.edit', $wp->id) }}"
-                                    class="text-yellow-600">
-                                    <span class="material-symbols-outlined text-2xl">edit</span>
-                                </a>
+        <!-- Edit -->
+        <a href="{{ route('wajib.pajak.edit', $wp->id) }}"
+            class="text-yellow-600">
+            <span class="material-symbols-outlined text-2xl">edit</span>
+        </a>
 
-                                <!-- WhatsApp -->
-                                <a href="{{ route('wajib.pajak.notifikasi', $wp->id) }}"
-                                    class="text-green-600">
-                                    <span class="material-symbols-outlined text-2xl">chat</span>
-                                </a>
+        <!-- WhatsApp -->
+        <a href="{{ route('wajib.pajak.notifikasi', $wp->id) }}"
+            class="text-green-600">
+            <span class="material-symbols-outlined text-2xl">chat</span>
+        </a>
 
-                                <!-- Delete -->
-                                <form id="delete-form-{{ $wp->id }}"
-                                    action="{{ route('wajib.pajak.destroy', $wp->id) }}" method="POST" class="inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="button" onclick="confirmDelete({{ $wp->id }})"
-                                        class="text-red-600">
-                                        <span class="material-symbols-outlined text-2xl">delete</span>
-                                    </button>
-                                </form>
+        <!-- Delete -->
+        <form id="delete-form-{{ $wp->id }}"
+            action="{{ route('wajib.pajak.destroy', $wp->id) }}"
+            method="POST">
+            @csrf
+            @method('DELETE')
+            <button type="button"
+                onclick="confirmDelete({{ $wp->id }})"
+                class="text-red-600">
+                <span class="material-symbols-outlined text-2xl">delete</span>
+            </button>
+        </form>
 
-                            </td>
+    </div>
+</td>
                         </tr>
 
                     @empty
@@ -148,7 +165,6 @@
                             </td>
                         </tr>
                     @endforelse
-
                 </tbody>
             </table>
         </div>

@@ -97,6 +97,7 @@ Route::middleware(['auth', 'role:admin,petugas'])->group(function () {
 // =========================
 Route::middleware(['auth', 'role:admin,pimpinan,petugas'])->group(function () {
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan');
+    Route::get('/laporan/pdf', [LaporanController::class, 'pdf'])->name('laporan.pdf');
 
     // Log Pesan
     Route::get('/log-pesan', [WaLogController::class, 'index'])->name('log.pesan');
